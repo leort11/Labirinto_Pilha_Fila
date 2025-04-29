@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -16,54 +15,40 @@ public class ResolucaoLabirinto {
                 return;
             }
 
-            Labirinto lab;
-            lab = new Labirinto(nomeArquivo);
-
+            Labirinto lab = new Labirinto(nomeArquivo);
             Pilha<Coordenada> caminho = new Pilha<>(lab.linhas * lab.colunas);
             Pilha<Fila<Coordenada>> possibilidades = new Pilha<>(lab.linhas * lab.colunas);
+            boolean[][] visitado = new boolean[lab.linhas][lab.colunas];
 
             Coordenada atual = encontrarEntrada(lab);
-            if (atual == null) {
-                System.out.println("Erro: Entrada não encontrada nas bordas.");
-                return;
-            }
+            visitado[atual.getLinha()][atual.getColuna()] = true;
 
             boolean achouSaida = false;
 
             while (true) {
-                // 1) Cria uma nova fila de possibilidades para 'atual'
                 Fila<Coordenada> fila = new Fila<>(4);
-                adicionarPossibilidades(lab, atual, fila);
+                adicionarPossibilidades(lab, atual, fila, visitado);
 
-                // 2) Se não há para onde ir, entra no modo regressivo
                 if (fila.isEmpty()) {
-                    // se não há mais nada no caminho e nem em possibilidades, acabou
                     if (caminho.isEmpty() && possibilidades.isEmpty()) {
                         System.out.println("Não existe caminho até a saída.");
                         break;
                     }
-                    // retrocede: retira último passo e marca como beco morto
+                    // modo regressivo: retrocede para último ponto e retoma fila
                     atual = caminho.pop();
-                    lab.labirinto[atual.getLinha()][atual.getColuna()] = '•';
-                    // recupera a fila de possibilidades do nível anterior
                     fila = possibilidades.pop();
-                }
-                else {
-                    // 3) Modo progressivo: guarda esta fila para voltar depois, e segue ao próximo
+                } else {
+                    // modo progressivo: salva fila e avança
                     possibilidades.push(fila);
-
-                    // pega próxima coordenada a tentar
                     atual = fila.remove();
+                    caminho.push(atual);
+                    visitado[atual.getLinha()][atual.getColuna()] = true;
 
-                    // 4) Se for saída, acabou
                     if (lab.labirinto[atual.getLinha()][atual.getColuna()] == 'S') {
                         achouSaida = true;
                         break;
                     }
-
-                    // 5) marca o passo, empilha no caminho, e segue o loop
                     lab.labirinto[atual.getLinha()][atual.getColuna()] = '*';
-                    caminho.push(atual);
                 }
             }
 
@@ -86,7 +71,6 @@ public class ResolucaoLabirinto {
     }
 
     static Coordenada encontrarEntrada(Labirinto lab) {
-        // Procura 'E' nas bordas
         for (int i = 0; i < lab.linhas; i++) {
             if (lab.labirinto[i][0] == 'E') return new Coordenada(i, 0);
             if (lab.labirinto[i][lab.colunas - 1] == 'E') return new Coordenada(i, lab.colunas - 1);
@@ -98,19 +82,22 @@ public class ResolucaoLabirinto {
         return null;
     }
 
-    static void adicionarPossibilidades(Labirinto lab, Coordenada atual, Fila<Coordenada> fila) throws Exception {
+    static void adicionarPossibilidades(Labirinto lab, Coordenada atual, Fila<Coordenada> fila, boolean[][] visitado) throws Exception {
         int l = atual.getLinha(), c = atual.getColuna();
-        if (posValida(l - 1, c, lab)) fila.enfileira(new Coordenada(l - 1, c));
-        if (posValida(l + 1, c, lab)) fila.enfileira(new Coordenada(l + 1, c));
-        if (posValida(l, c - 1, lab)) fila.enfileira(new Coordenada(l, c - 1));
-        if (posValida(l, c + 1, lab)) fila.enfileira(new Coordenada(l, c + 1));
+        // cima
+        if (posValida(l - 1, c, lab) && !visitado[l - 1][c]) fila.enfileira(new Coordenada(l - 1, c));
+        // baixo
+        if (posValida(l + 1, c, lab) && !visitado[l + 1][c]) fila.enfileira(new Coordenada(l + 1, c));
+        // esquerda
+        if (posValida(l, c - 1, lab) && !visitado[l][c - 1]) fila.enfileira(new Coordenada(l, c - 1));
+        // direita
+        if (posValida(l, c + 1, lab) && !visitado[l][c + 1]) fila.enfileira(new Coordenada(l, c + 1));
     }
 
     static boolean posValida(int l, int c, Labirinto lab) {
-        char v = lab.labirinto[l][c];
         return l >= 0 && l < lab.linhas && c >= 0 && c < lab.colunas &&
-               (v == ' ' || v == 'S'); 
-    }    
+               (lab.labirinto[l][c] == ' ' || lab.labirinto[l][c] == 'S');
+    }
 }
 
 class Labirinto {
@@ -147,7 +134,6 @@ class Labirinto {
                 char c = linha.charAt(j);
                 switch (c) {
                     case '#':
-                    case '•':
                     case ' ':
                         labirinto[i][j] = c;
                         break;
