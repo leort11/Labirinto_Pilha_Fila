@@ -1,4 +1,3 @@
-
 public class Pilha<T> {
     private final Object[] elementos;
     private int topo = 0;
@@ -50,5 +49,15 @@ public class Pilha<T> {
         return sb.toString();
     }
 
-    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pilha<?> pilha = (Pilha<?>) o;
+        if (topo != pilha.topo) return false;
+        for (int i = 0; i < topo; i++) {
+            if (!elementos[i].equals(pilha.elementos[i])) return false;
+        }
+        return true;
+    }
 }

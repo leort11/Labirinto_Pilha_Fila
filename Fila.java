@@ -1,4 +1,3 @@
-
 public class Fila<T> {
     private final Object[] buffer;
     private int head = 0, tail = 0, size = 0;
@@ -62,5 +61,18 @@ public class Fila<T> {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Fila<?> fila = (Fila<?>) o;
+        if (size != fila.size) return false;
+        for (int i = 0; i < size; i++) {
+            if (!buffer[(head + i) % buffer.length].equals(fila.buffer[(fila.head + i) % fila.buffer.length]))
+                return false;
+        }
+        return true;
     }
 }

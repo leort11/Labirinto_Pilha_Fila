@@ -163,4 +163,18 @@ class Labirinto {
         }
         System.out.println();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Labirinto labirinto1 = (Labirinto) o;
+        if (linhas != labirinto1.linhas || colunas != labirinto1.colunas) return false;
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                if (labirinto[i][j] != labirinto1.labirinto[i][j]) return false;
+            }
+        }
+        return true;
+    }
 }
