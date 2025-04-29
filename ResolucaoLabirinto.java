@@ -29,37 +29,43 @@ public class ResolucaoLabirinto {
             }
 
             boolean achouSaida = false;
+
             while (true) {
-                Fila<Coordenada> fila;
+                // 1) Cria uma nova fila de possibilidades para 'atual'
+                Fila<Coordenada> fila = new Fila<>(4);
+                adicionarPossibilidades(lab, atual, fila);
 
-                if (!possibilidades.isEmpty()) {
-                    fila = possibilidades.pop();
-                } else {
-                    fila = new Fila<>(4);
-                    adicionarPossibilidades(lab, atual, fila);
-                }
-
+                // 2) Se não há para onde ir, entra no modo regressivo
                 if (fila.isEmpty()) {
+                    // se não há mais nada no caminho e nem em possibilidades, acabou
                     if (caminho.isEmpty() && possibilidades.isEmpty()) {
                         System.out.println("Não existe caminho até a saída.");
                         break;
                     }
+                    // retrocede: retira último passo e marca como beco morto
                     atual = caminho.pop();
                     lab.labirinto[atual.getLinha()][atual.getColuna()] = '•';
-                    continue;
-                } else {
-                    atual = fila.remove();
-                    if (!fila.isEmpty()) possibilidades.push(fila);
+                    // recupera a fila de possibilidades do nível anterior
+                    fila = possibilidades.pop();
+                }
+                else {
+                    // 3) Modo progressivo: guarda esta fila para voltar depois, e segue ao próximo
+                    possibilidades.push(fila);
 
+                    // pega próxima coordenada a tentar
+                    atual = fila.remove();
+
+                    // 4) Se for saída, acabou
                     if (lab.labirinto[atual.getLinha()][atual.getColuna()] == 'S') {
                         achouSaida = true;
                         break;
                     }
+
+                    // 5) marca o passo, empilha no caminho, e segue o loop
                     lab.labirinto[atual.getLinha()][atual.getColuna()] = '*';
                     caminho.push(atual);
                 }
             }
-
 
             if (achouSaida) {
                 lab.mostrar();
