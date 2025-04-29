@@ -17,12 +17,7 @@ public class ResolucaoLabirinto {
             }
 
             Labirinto lab;
-            try {
-                lab = new Labirinto(nomeArquivo);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Erro no formato do arquivo: " + e.getMessage());
-                return;
-            }
+            lab = new Labirinto(nomeArquivo);
 
             Pilha<Coordenada> caminho = new Pilha<>(lab.linhas * lab.colunas);
             Pilha<Fila<Coordenada>> possibilidades = new Pilha<>(lab.linhas * lab.colunas);
@@ -35,30 +30,36 @@ public class ResolucaoLabirinto {
 
             boolean achouSaida = false;
             while (true) {
-                Fila<Coordenada> fila = new Fila<>(3);
-                adicionarPossibilidades(lab, atual, fila);
+                Fila<Coordenada> fila;
+
+                if (!possibilidades.isEmpty()) {
+                    fila = possibilidades.pop();
+                } else {
+                    fila = new Fila<>(4);
+                    adicionarPossibilidades(lab, atual, fila);
+                }
 
                 if (fila.isEmpty()) {
-                    // Modo regressivo
-                    if (caminho.isEmpty()) {
-                        System.out.println("Sem caminho possível.");
+                    if (caminho.isEmpty() && possibilidades.isEmpty()) {
+                        System.out.println("Não existe caminho até a saída.");
                         break;
                     }
                     atual = caminho.pop();
-                    lab.labirinto[atual.getLinha()][atual.getColuna()] = ' ';
-                    possibilidades.pop();
+                    lab.labirinto[atual.getLinha()][atual.getColuna()] = '•';
+                    continue;
                 } else {
-                    // Modo progressivo
                     atual = fila.remove();
+                    if (!fila.isEmpty()) possibilidades.push(fila);
+
                     if (lab.labirinto[atual.getLinha()][atual.getColuna()] == 'S') {
                         achouSaida = true;
                         break;
                     }
                     lab.labirinto[atual.getLinha()][atual.getColuna()] = '*';
                     caminho.push(atual);
-                    possibilidades.push(fila);
                 }
             }
+
 
             if (achouSaida) {
                 lab.mostrar();
@@ -100,45 +101,76 @@ public class ResolucaoLabirinto {
     }
 
     static boolean posValida(int l, int c, Labirinto lab) {
+        char v = lab.labirinto[l][c];
         return l >= 0 && l < lab.linhas && c >= 0 && c < lab.colunas &&
-               (lab.labirinto[l][c] == ' ' || lab.labirinto[l][c] == 'S');
-    }
+               (v == ' ' || v == 'S'); 
+    }    
 }
 
 class Labirinto {
     char[][] labirinto;
     int linhas, colunas;
 
-    public Labirinto(String arquivo) throws IOException {
-        Scanner sc = new Scanner(new File(arquivo));
-        try {
-            if (!sc.hasNextInt()) throw new IllegalArgumentException("Número de linhas inválido.");
-            linhas = sc.nextInt();
-            if (!sc.hasNextInt()) throw new IllegalArgumentException("Número de colunas inválido.");
-            colunas = sc.nextInt();
-            sc.nextLine();
+    public Labirinto(String arquivo) throws Exception {
+        File f = new File(arquivo);
+        if (!f.exists() || !f.isFile())
+            throw new Exception("Arquivo não encontrado: " + arquivo);
 
-            labirinto = new char[linhas][colunas];
-            for (int i = 0; i < linhas; i++) {
-                if (!sc.hasNextLine()) throw new IllegalArgumentException("Linhas insuficientes no arquivo.");
-                String linha = sc.nextLine();
-                if (linha.length() != colunas) throw new IllegalArgumentException("Linha " + (i + 1) + " com tamanho inválido.");
-                for (int j = 0; j < colunas; j++) {
-                    char ch = linha.charAt(j);
-                    if (ch != ' ' && ch != 'E' && ch != 'S' && ch != '*') {
-                        throw new IllegalArgumentException("Caractere inválido '" + ch + "' na linha " + (i + 1) + ".");
-                    }
-                    labirinto[i][j] = ch;
+        Scanner sc = new Scanner(f);
+        if (!sc.hasNextInt()) throw new Exception("Falta número de linhas");
+        linhas = sc.nextInt();
+        if (!sc.hasNextInt()) throw new Exception("Falta número de colunas");
+        colunas = sc.nextInt();
+        sc.nextLine();
+
+        if (linhas <= 0 || colunas <= 0)
+            throw new Exception("Dimensões inválidas: " + linhas + "x" + colunas);
+
+        labirinto = new char[linhas][colunas];
+        int countE = 0, countS = 0;
+
+        for (int i = 0; i < linhas; i++) {
+            if (!sc.hasNextLine())
+                throw new Exception("Número de linhas do labirinto menor que o esperado");
+
+            String linha = sc.nextLine();
+            if (linha.length() != colunas)
+                throw new Exception("Linha " + i + " tem tamanho diferente de " + colunas);
+
+            for (int j = 0; j < colunas; j++) {
+                char c = linha.charAt(j);
+                switch (c) {
+                    case '#':
+                    case '•':
+                    case ' ':
+                        labirinto[i][j] = c;
+                        break;
+                    case 'E':
+                        if (i != 0 && i != linhas - 1 && j != 0 && j != colunas - 1)
+                            throw new Exception("Entrada 'E' não está na borda: (" + i + "," + j + ")");
+                        countE++;
+                        labirinto[i][j] = c;
+                        break;
+                    case 'S':
+                        countS++;
+                        labirinto[i][j] = c;
+                        break;
+                    default:
+                        throw new Exception("Caracter inválido: '" + c + "' em (" + i + "," + j + ")");
                 }
             }
-        } finally {
-            sc.close();
         }
+        sc.close();
+
+        if (countE == 0) throw new Exception("Nenhuma entrada 'E' encontrada");
+        if (countE > 1) throw new Exception("Mais de uma entrada 'E' encontrada");
+        if (countS == 0) throw new Exception("Nenhuma saída 'S' encontrada");
+        if (countS > 1) throw new Exception("Mais de uma saída 'S' encontrada");
     }
 
     void mostrar() {
-        for (char[] l : labirinto) {
-            System.out.println(new String(l));
+        for (char[] linha : labirinto) {
+            System.out.println(new String(linha));
         }
         System.out.println();
     }
