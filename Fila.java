@@ -3,14 +3,12 @@ public class Fila<T> {
     private final Object[] buffer;
     private int head = 0, tail = 0, size = 0;
 
-    // Construtor para inicializar a fila com uma capacidade específica
     public Fila(int capacidade) throws Exception {
         if (capacidade <= 0)
             throw new Exception("Capacidade inválida");
         buffer = new Object[capacidade];
     }
 
-    // Adiciona um item à fila
     public void enfileira(T item) throws Exception {
         if (size == buffer.length)
             throw new Exception("Fila cheia");
@@ -19,7 +17,6 @@ public class Fila<T> {
         size++;
     }
 
-    // Remove e retorna o item na frente da fila
     @SuppressWarnings("unchecked")
     public T remove() throws Exception {
         if (size == 0)
@@ -31,7 +28,6 @@ public class Fila<T> {
         return ret;
     }
 
-    // Retorna o item na frente da fila sem removê-lo
     @SuppressWarnings("unchecked")
     public T peek() throws Exception {
         if (size == 0)
@@ -39,17 +35,14 @@ public class Fila<T> {
         return (T) buffer[head];
     }
 
-    // Retorna o número de elementos na fila
     public int size() {
         return size;
     }
 
-    // Verifica se a fila está vazia
     public boolean isEmpty() {
         return size == 0;
     }
 
-    // Limpa todos os elementos da fila
     public void clear() {
         for (int i = 0; i < buffer.length; i++) {
             buffer[i] = null;
@@ -59,7 +52,6 @@ public class Fila<T> {
         size = 0;
     }
 
-    // Representação em String da fila (para depuração)
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
