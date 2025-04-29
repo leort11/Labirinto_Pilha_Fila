@@ -35,6 +35,7 @@ public class ResolucaoLabirinto {
                         break;
                     }
                     // modo regressivo: retrocede para último ponto e retoma fila
+                    lab.labirinto[atual.getLinha()][atual.getColuna()] = ' ';
                     atual = caminho.pop();
                     fila = possibilidades.pop();
                 } else {
@@ -84,13 +85,9 @@ public class ResolucaoLabirinto {
 
     static void adicionarPossibilidades(Labirinto lab, Coordenada atual, Fila<Coordenada> fila, boolean[][] visitado) throws Exception {
         int l = atual.getLinha(), c = atual.getColuna();
-        // cima
         if (posValida(l - 1, c, lab) && !visitado[l - 1][c]) fila.enfileira(new Coordenada(l - 1, c));
-        // baixo
         if (posValida(l + 1, c, lab) && !visitado[l + 1][c]) fila.enfileira(new Coordenada(l + 1, c));
-        // esquerda
         if (posValida(l, c - 1, lab) && !visitado[l][c - 1]) fila.enfileira(new Coordenada(l, c - 1));
-        // direita
         if (posValida(l, c + 1, lab) && !visitado[l][c + 1]) fila.enfileira(new Coordenada(l, c + 1));
     }
 
